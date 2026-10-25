@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Lokale MQTT-Zugangsdaten (Vorlage: mqtt.env.example)
+mqtt.env
+
+# Laufzeit-Zustand (Allowlist known_devices.json)
+state/

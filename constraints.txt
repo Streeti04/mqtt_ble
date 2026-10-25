@@ -1,0 +1,8 @@
+# Tested dependency versions. Install with:
+#   pip install -r requirements.txt -c constraints.txt
+paho-mqtt==2.1.0
+bleak==3.0.1
+bleak-retry-connector==4.6.0
+govee-ble==1.2.0
+govee_led_wez==0.0.15
+bluetooth-adapters==2.4.0

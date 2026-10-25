@@ -1,0 +1,4 @@
+# Core dependencies
+paho-mqtt>=2.1.0
+bleak>=1.1.0
+govee-led-wez>=0.0.15
