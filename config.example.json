@@ -1,0 +1,15 @@
+{
+  "ble": {
+    "light_models": ["H6099"],
+    "light_model_prefixes": ["H60", "H61", "H70", "H71"],
+    "fallback_light_model": "H6099",
+    "sensor_publish_seconds": 60,
+    "learn_seconds": 600
+  },
+  "lan": {
+    "device_name_prefix": "Govee",
+    "custom_device_names": {},
+    "allowed_macs": [],
+    "status_poll_seconds": 5
+  }
+}

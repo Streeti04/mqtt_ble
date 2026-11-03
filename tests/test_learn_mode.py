@@ -44,7 +44,7 @@ class LearnWindowTests(unittest.TestCase):
         clock.now += 1
         self.assertFalse(window.is_active())
         self.assertTrue(window.poll_expired())
-        self.assertFalse(window.poll_expired())  # nur einmal melden
+        self.assertFalse(window.poll_expired())  # Report expiry once
 
     def test_disable_reports_previous_state(self):
         window = LearnWindow(600, clock=FakeClock())
@@ -79,13 +79,19 @@ class DecideTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_known_device_allowed_without_learning(self):
-        self.assertEqual(decide("govee_ble_light_known", self.allowlist, False), DECISION_ALLOW)
+        self.assertEqual(
+            decide("govee_ble_light_known", self.allowlist, False), DECISION_ALLOW
+        )
 
     def test_known_device_allowed_while_learning(self):
-        self.assertEqual(decide("govee_ble_light_known", self.allowlist, True), DECISION_ALLOW)
+        self.assertEqual(
+            decide("govee_ble_light_known", self.allowlist, True), DECISION_ALLOW
+        )
 
     def test_unknown_device_ignored_without_learning(self):
-        self.assertEqual(decide("govee_ble_light_neighbor", self.allowlist, False), DECISION_IGNORE)
+        self.assertEqual(
+            decide("govee_ble_light_neighbor", self.allowlist, False), DECISION_IGNORE
+        )
         self.assertFalse(self.allowlist.contains("govee_ble_light_neighbor"))
 
     def test_unknown_device_learned_while_learning(self):
@@ -108,7 +114,9 @@ class AllowlistPersistenceTests(unittest.TestCase):
     def test_add_persists_across_reload(self):
         allowlist = Allowlist.load(self.path)
         self.assertTrue(allowlist.add("govee_abc", name="GVH5075_ABCD", source="learn"))
-        self.assertFalse(allowlist.add("govee_abc"))  # doppelt -> False
+        self.assertFalse(
+            allowlist.add("govee_abc")
+        )  # Duplicate admission returns False
         reloaded = Allowlist.load(self.path)
         self.assertTrue(reloaded.contains("govee_abc"))
         data = json.loads(self.path.read_text(encoding="utf-8"))
@@ -125,10 +133,10 @@ class AllowlistPersistenceTests(unittest.TestCase):
 
     def test_corrupt_file_raises_and_is_not_overwritten(self):
         self.path.parent.mkdir(parents=True)
-        self.path.write_text("{kaputt", encoding="utf-8")
+        self.path.write_text("{broken", encoding="utf-8")
         with self.assertRaises(ValueError):
             Allowlist.load(self.path)
-        self.assertEqual(self.path.read_text(encoding="utf-8"), "{kaputt")
+        self.assertEqual(self.path.read_text(encoding="utf-8"), "{broken")
 
 
 class SwitchPayloadTests(unittest.TestCase):
@@ -152,7 +160,7 @@ class OnceLoggerTests(unittest.TestCase):
         log = OnceLogger(max_entries=2)
         log.first_time("a")
         log.first_time("b")
-        log.first_time("c")  # leert und startet neu
+        log.first_time("c")  # Clear the bounded set and start again
         self.assertTrue(log.first_time("a"))
 
 

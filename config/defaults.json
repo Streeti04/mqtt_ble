@@ -1,0 +1,22 @@
+{
+  "ble": {
+    "sensor_name_prefixes": ["GVH5"],
+    "light_models": ["H6099"],
+    "light_model_prefixes": ["H60", "H61", "H70", "H71"],
+    "light_name_prefixes": ["H6", "H7"],
+    "fallback_light_model": "H6099",
+    "sensor_publish_seconds": 60,
+    "light_publish_seconds": 30,
+    "cache_clear_seconds": 3600,
+    "learn_seconds": 600,
+    "state_dir": "state"
+  },
+  "lan": {
+    "device_name_prefix": "Govee",
+    "custom_device_names": {},
+    "allowed_macs": [],
+    "discovery_timeout_seconds": 4,
+    "discovery_retries": 3,
+    "status_poll_seconds": 5
+  }
+}
