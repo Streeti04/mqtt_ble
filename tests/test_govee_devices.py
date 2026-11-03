@@ -1,7 +1,7 @@
 import unittest
 
-from app_config import load_app_config
-from govee_devices import (
+from mqtt_ble.config import load_app_config
+from mqtt_ble.devices import (
     decode_sensor_data,
     ha_brightness_to_pct,
     is_supported_light,
@@ -11,7 +11,7 @@ from govee_devices import (
     pct_to_ha_brightness,
     validate_light_command,
 )
-from ha_discovery import (
+from mqtt_ble.mqtt.discovery import (
     lan_discovery,
     lan_topics,
     light_device_id,

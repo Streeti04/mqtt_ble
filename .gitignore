@@ -22,12 +22,17 @@ Thumbs.db
 # Logs
 *.log
 
-# Local MQTT credentials (template: mqtt.env.example)
+# Local MQTT credentials (template: config/mqtt.env.example)
 mqtt.env
 
 # Runtime state (known_devices.json allowlist)
 state/
 
-# Local device settings (template: config.example.json)
+# Local device settings (template: config/config.example.json)
 config.json
 .ruff_cache/
+
+# Python packaging
+build/
+dist/
+*.egg-info/

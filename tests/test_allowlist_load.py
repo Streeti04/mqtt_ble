@@ -3,8 +3,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from learn_mode import Allowlist
-from mqtt_config import MqttConfigError, load_mqtt_config
+from mqtt_ble.ble.learning import Allowlist
+from mqtt_ble.mqtt.config import MqttConfigError, load_mqtt_config
 
 
 class AllowlistLoadTests(unittest.TestCase):

@@ -4,7 +4,7 @@ import unittest
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 
-from scanner_cache import clear_scanner_cache
+from mqtt_ble.ble.scanner_cache import clear_scanner_cache
 
 
 def make_scanner(n):

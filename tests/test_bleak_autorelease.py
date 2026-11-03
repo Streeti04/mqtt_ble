@@ -1,7 +1,7 @@
 import sys
 import unittest
 
-import bleak_autorelease
+from mqtt_ble.ble import autorelease
 
 try:
     import objc
@@ -40,7 +40,7 @@ class InstallTest(unittest.TestCase):
         )
         objc.autorelease_pool = SpyPool
         try:
-            self.assertTrue(bleak_autorelease.install())
+            self.assertTrue(autorelease.install())
             CentralManagerDelegate.did_discover_peripheral(None, 1, 2, 3, 4)
         finally:
             objc.autorelease_pool = real_pool
@@ -49,9 +49,9 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(calls, [(1, 2, 3, 4)])
 
     def test_install_is_idempotent(self):
-        bleak_autorelease.install()
+        autorelease.install()
         once = CentralManagerDelegate.did_discover_peripheral
-        bleak_autorelease.install()
+        autorelease.install()
         self.assertIs(CentralManagerDelegate.did_discover_peripheral, once)
 
 

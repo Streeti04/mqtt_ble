@@ -9,7 +9,7 @@ import uuid
 
 from paho.mqtt import client as mqtt_client
 
-from mqtt_config import load_mqtt_config_or_exit
+from mqtt_ble.mqtt.config import load_mqtt_config_or_exit
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,3 @@ class MqttClient:
 
     def loop(self):
         self.client.loop_forever()
-
-
-# Keep the original import name available for external scripts.
-basic_mqtt = MqttClient

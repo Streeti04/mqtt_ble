@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app_config import AppConfigError, load_app_config
-from govee_devices import is_supported_light, light_control_model
+from mqtt_ble.config import AppConfigError, load_app_config
+from mqtt_ble.devices import is_supported_light, light_control_model
 
 
 class AppConfigTests(unittest.TestCase):
@@ -112,5 +112,5 @@ class AppConfigTests(unittest.TestCase):
                 self.load({}, {"MQTT_BLE_LEARN_SECONDS": value})
 
     def test_example_is_valid_without_mqtt_credentials(self):
-        example = Path(__file__).resolve().parents[1] / "config.example.json"
+        example = Path(__file__).resolve().parents[1] / "config" / "config.example.json"
         load_app_config(example, environ={})

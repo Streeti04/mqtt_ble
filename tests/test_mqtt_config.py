@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from mqtt_config import MqttConfigError, load_mqtt_config, parse_env_text
+from mqtt_ble.mqtt.config import MqttConfigError, load_mqtt_config, parse_env_text
 
 DUMMY = "dummy-#-pw!"  # Dummy value, never a real credential
 
@@ -83,7 +83,7 @@ class LoadConfigTests(unittest.TestCase):
             load_mqtt_config(env_file=self.env_file, environ={})
 
     def test_example_file_is_placeholder_only(self):
-        example = Path(__file__).resolve().parents[1] / "mqtt.env.example"
+        example = Path(__file__).resolve().parents[1] / "config" / "mqtt.env.example"
         values = parse_env_text(example.read_text(encoding="utf-8"))
         self.assertEqual(values["MQTT_PASSWORD"], "CHANGE_ME")
         self.assertEqual(values["MQTT_USER"], "CHANGE_ME")

@@ -4,7 +4,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from monitor_mqtt import GoveeMonitor
+from mqtt_ble.mqtt.monitor import GoveeMonitor
 
 
 class MonitorTests(unittest.TestCase):

@@ -9,10 +9,19 @@ import time
 from bleak import BleakScanner
 from govee_led_wez.govee import GoveeController, GoveeDevice
 
-import bleak_autorelease
-from app_config import load_app_config_or_exit
-from basic_mqtt import MqttClient
-from govee_devices import (
+from mqtt_ble.ble import autorelease
+from mqtt_ble.ble.learning import (
+    DECISION_ALLOW,
+    DECISION_LEARN,
+    Allowlist,
+    LearnWindow,
+    OnceLogger,
+    decide,
+    parse_switch_payload,
+)
+from mqtt_ble.ble.scanner_cache import clear_scanner_cache
+from mqtt_ble.config import load_app_config_or_exit
+from mqtt_ble.devices import (
     SENSOR_COMPANY_ID,
     decode_sensor_data,
     ha_brightness_to_pct,
@@ -23,7 +32,8 @@ from govee_devices import (
     pct_to_ha_brightness,
     validate_light_command,
 )
-from ha_discovery import (
+from mqtt_ble.mqtt.client import MqttClient
+from mqtt_ble.mqtt.discovery import (
     LEARN_COMMAND_TOPIC,
     LEARN_DISCOVERY_TOPIC,
     LEARN_STATE_TOPIC,
@@ -35,16 +45,6 @@ from ha_discovery import (
     sensor_device_id,
     sensor_discovery,
 )
-from learn_mode import (
-    DECISION_ALLOW,
-    DECISION_LEARN,
-    Allowlist,
-    LearnWindow,
-    OnceLogger,
-    decide,
-    parse_switch_payload,
-)
-from scanner_cache import clear_scanner_cache
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +241,7 @@ class BleObserver:
 
     async def run(self):
         self.event_loop = asyncio.get_running_loop()
-        if not bleak_autorelease.install():
+        if not autorelease.install():
             logger.warning("CoreBluetooth autorelease patch unavailable")
         scanner = BleakScanner(detection_callback=self.on_advertisement)
         self.mqtt.client.will_set(OBSERVER_STATUS_TOPIC, "offline", retain=True)

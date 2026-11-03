@@ -39,8 +39,8 @@ flowchart LR
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt -c constraints.txt
-cp mqtt.env.example mqtt.env
+pip install -e . -c constraints.txt
+cp config/mqtt.env.example mqtt.env
 chmod 600 mqtt.env
 ```
 
@@ -53,10 +53,10 @@ Device models, matching rules, publish intervals, learning duration, LAN device 
 and custom names can be changed without editing Python:
 
 ```bash
-cp config.example.json config.json
+cp config/config.example.json config.json
 ```
 
-The local file overrides [`config/defaults.json`](config/defaults.json). See the
+The local file overrides [`src/mqtt_ble/resources/defaults.json`](src/mqtt_ble/resources/defaults.json). See the
 [configuration reference](docs/configuration.md) for all settings, precedence, model
 compatibility, and state paths. MQTT credentials stay in `mqtt.env`.
 
@@ -69,19 +69,20 @@ always starts OFF and ignores retained commands.
 Start the BLE observer and the LAN bridge in separate terminals:
 
 ```bash
-.venv/bin/python observe_bleak.py
-.venv/bin/python govee_lan.py
+.venv/bin/mqtt-ble-observer
+.venv/bin/mqtt-ble-lan
 ```
 
-The original `goove_mqtt_bridge.py` command remains available for existing setups.
+Existing setups should update their launch commands using the
+[migration notes](docs/development.md#migrating-from-root-scripts).
 
 For broker diagnostics, run:
 
 ```bash
-.venv/bin/python monitor_mqtt.py
+.venv/bin/mqtt-ble-monitor
 ```
 
-See [Home Assistant setup](HOME_ASSISTANT_SETUP.md) for the MQTT integration, entities,
+See [Home Assistant setup](docs/home-assistant.md) for the MQTT integration, entities,
 topics, and troubleshooting guidance.
 
 ## Topics
@@ -113,16 +114,17 @@ and compatibility details. Checks also run automatically on pull requests.
 ## Project layout
 
 ```text
-config/defaults.json   versioned device matching and runtime defaults
-config.example.json   template for optional local overrides
-app_config.py         validated application settings
-mqtt_config.py        environment and mqtt.env credentials
-basic_mqtt.py         shared MQTT connection wrapper
-observe_bleak.py      BLE observer and light command coordination
-govee_lan.py          local Govee LAN discovery and control
-ha_discovery.py       Home Assistant entity payloads and stable identifiers
-govee_devices.py      pure device matching and wire-format helpers
-learn_mode.py         time-limited learning and persistent device admission
-tools/                optional BLE advertisement diagnostics
-tests/                configuration, compatibility, and runtime regression tests
+src/mqtt_ble/
+├── ble/          observer, device learning, and Bluetooth backend helpers
+├── lan/          local-network discovery and light control
+├── mqtt/         client, credentials, Home Assistant discovery, and monitor
+├── resources/    bundled device and runtime defaults
+├── config.py     validated application settings
+├── devices.py    pure device matching and wire-format helpers
+└── paths.py      configuration directory resolution
+config/           templates for local settings and MQTT credentials
+docs/             configuration, Home Assistant setup, and development guides
+tests/            configuration, compatibility, and runtime regression tests
+tools/            optional BLE advertisement diagnostics
+pyproject.toml    package metadata, console commands, and lint settings
 ```

@@ -7,12 +7,16 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from app_config import load_app_config
-from basic_mqtt import MqttClient
-from govee_lan import LanBridge
-from ha_discovery import LEARN_COMMAND_TOPIC, light_device_id, sensor_device_id
-from mqtt_config import MqttConfig
-from observe_bleak import BleObserver
+from mqtt_ble.ble.observer import BleObserver
+from mqtt_ble.config import load_app_config
+from mqtt_ble.lan.bridge import LanBridge
+from mqtt_ble.mqtt.client import MqttClient
+from mqtt_ble.mqtt.config import MqttConfig
+from mqtt_ble.mqtt.discovery import (
+    LEARN_COMMAND_TOPIC,
+    light_device_id,
+    sensor_device_id,
+)
 
 
 class RuntimeTests(unittest.TestCase):
@@ -91,21 +95,19 @@ class RuntimeTests(unittest.TestCase):
 
     def test_importing_entry_points_has_no_credentials_or_socket_side_effects(self):
         # Dependencies are loaded first; only application imports are under test.
-        import goove_mqtt_bridge
-        import monitor_mqtt
+        from mqtt_ble.mqtt import monitor
 
         with (
             mock.patch("socket.socket", side_effect=AssertionError("socket opened")),
             mock.patch(
-                "basic_mqtt.load_mqtt_config_or_exit",
+                "mqtt_ble.mqtt.client.load_mqtt_config_or_exit",
                 side_effect=AssertionError("credentials loaded"),
             ),
         ):
             for module in (
-                importlib.import_module("observe_bleak"),
-                importlib.import_module("govee_lan"),
-                monitor_mqtt,
-                goove_mqtt_bridge,
+                importlib.import_module("mqtt_ble.ble.observer"),
+                importlib.import_module("mqtt_ble.lan.bridge"),
+                monitor,
             ):
                 importlib.reload(module)
 
@@ -113,7 +115,7 @@ class RuntimeTests(unittest.TestCase):
 class MqttCallbackTests(unittest.TestCase):
     def test_callbacks_are_installed_before_connect_and_loop(self):
         config = MqttConfig("example.invalid", 1883, "dummy-user", "dummy-password")
-        with mock.patch("basic_mqtt.mqtt_client.Client") as constructor:
+        with mock.patch("mqtt_ble.mqtt.client.mqtt_client.Client") as constructor:
             mqtt = MqttClient(config=config)
             connected = mock.Mock()
             received = mock.Mock()
@@ -177,7 +179,7 @@ class LanTests(unittest.TestCase):
         self.bridge.sock.sendto.assert_not_called()
 
     def test_valid_command_sends_power_brightness_then_status(self):
-        with mock.patch("govee_lan.time.sleep"):
+        with mock.patch("mqtt_ble.lan.bridge.time.sleep"):
             self.bridge.on_message(
                 None,
                 None,
@@ -208,9 +210,9 @@ class ObserverShutdownTests(unittest.IsolatedAsyncioTestCase):
                 stop=mock.AsyncMock(),
             )
             with (
-                mock.patch("observe_bleak.BleakScanner", return_value=scanner),
+                mock.patch("mqtt_ble.ble.observer.BleakScanner", return_value=scanner),
                 mock.patch(
-                    "observe_bleak.bleak_autorelease.install", return_value=True
+                    "mqtt_ble.ble.observer.autorelease.install", return_value=True
                 ),
             ):
                 with self.assertRaises(OSError):
@@ -253,9 +255,9 @@ class LanShutdownTests(unittest.TestCase):
         mqtt = mock.Mock()
         bridge = LanBridge(load_app_config(environ={}).lan, mqtt)
         with (
-            mock.patch("govee_lan.socket.socket") as socket_factory,
+            mock.patch("mqtt_ble.lan.bridge.socket.socket") as socket_factory,
             mock.patch.object(bridge, "discover", return_value=0),
-            self.assertLogs("govee_lan", level="ERROR"),
+            self.assertLogs("mqtt_ble.lan.bridge", level="ERROR"),
         ):
             self.assertEqual(bridge.run(), 1)
         socket_factory.return_value.close.assert_called_once()
@@ -264,7 +266,7 @@ class LanShutdownTests(unittest.TestCase):
     def test_bind_failure_still_closes_socket(self):
         mqtt = mock.Mock()
         bridge = LanBridge(load_app_config(environ={}).lan, mqtt)
-        with mock.patch("govee_lan.socket.socket") as socket_factory:
+        with mock.patch("mqtt_ble.lan.bridge.socket.socket") as socket_factory:
             socket_factory.return_value.bind.side_effect = OSError("port in use")
             with self.assertRaises(OSError):
                 bridge.run()

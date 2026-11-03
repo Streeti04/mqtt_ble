@@ -6,10 +6,10 @@ import socket
 import threading
 import time
 
-from app_config import load_app_config_or_exit
-from basic_mqtt import MqttClient
-from govee_devices import normalize_mac, validate_light_command
-from ha_discovery import lan_discovery, lan_topics
+from mqtt_ble.config import load_app_config_or_exit
+from mqtt_ble.devices import normalize_mac, validate_light_command
+from mqtt_ble.mqtt.client import MqttClient
+from mqtt_ble.mqtt.discovery import lan_discovery, lan_topics
 
 logger = logging.getLogger(__name__)
 
