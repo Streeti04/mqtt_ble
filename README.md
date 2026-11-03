@@ -1,6 +1,6 @@
 # mqtt_ble — BLE ↔ MQTT for Home Assistant
 
-A small macOS bridge for bringing Govee BLE sensors and lights into Home Assistant through
+A macOS bridge for bringing Govee BLE sensors and lights into Home Assistant through
 MQTT, with a separate local-network bridge for Govee LAN lights. The services run locally
 and use MQTT Discovery to create Home Assistant entities.
 
@@ -49,14 +49,31 @@ ignored by Git. Configuration can also be supplied through `MQTT_HOST`, `MQTT_PO
 `MQTT_USER`, and `MQTT_PASSWORD` environment variables. Missing or placeholder credentials
 cause the services to stop with a clear error.
 
+Device models, matching rules, publish intervals, learning duration, LAN device filters,
+and custom names can be changed without editing Python:
+
+```bash
+cp config.example.json config.json
+```
+
+The local file overrides [`config/defaults.json`](config/defaults.json). See the
+[configuration reference](docs/configuration.md) for all settings, precedence, model
+compatibility, and state paths. MQTT credentials stay in `mqtt.env`.
+
+On first start, the BLE allowlist is empty. Enable **Allow new BLE devices** in Home
+Assistant to learn supported nearby devices for ten minutes (configurable). Learning
+always starts OFF and ignores retained commands.
+
 ## Run
 
 Start the BLE observer and the LAN bridge in separate terminals:
 
 ```bash
 .venv/bin/python observe_bleak.py
-.venv/bin/python goove_mqtt_bridge.py
+.venv/bin/python govee_lan.py
 ```
+
+The original `goove_mqtt_bridge.py` command remains available for existing setups.
 
 For broker diagnostics, run:
 
@@ -81,18 +98,31 @@ topics, and troubleshooting guidance.
 The observer also publishes its online state and the learning switch through dedicated
 `mqtt_ble/observe/` topics.
 
-## Tests
+## Development
 
 ```bash
+pip install -r requirements-dev.txt -c constraints.txt
+ruff check .
+ruff format --check .
 python -m unittest discover -s tests -v
 ```
+
+See the [development guide](docs/development.md) for module responsibilities, testing,
+and compatibility details. Checks also run automatically on pull requests.
 
 ## Project layout
 
 ```text
-observe_bleak.py       BLE scan, sensor/light discovery, and learning mode
-goove_mqtt_bridge.py  local Govee LAN discovery and control
-mqtt_config.py        environment and mqtt.env configuration
-learn_mode.py         time-limited device learning and allowlist logic
-tests/                configuration, learning, BLE cache, and runtime tests
+config/defaults.json   versioned device matching and runtime defaults
+config.example.json   template for optional local overrides
+app_config.py         validated application settings
+mqtt_config.py        environment and mqtt.env credentials
+basic_mqtt.py         shared MQTT connection wrapper
+observe_bleak.py      BLE observer and light command coordination
+govee_lan.py          local Govee LAN discovery and control
+ha_discovery.py       Home Assistant entity payloads and stable identifiers
+govee_devices.py      pure device matching and wire-format helpers
+learn_mode.py         time-limited learning and persistent device admission
+tools/                optional BLE advertisement diagnostics
+tests/                configuration, compatibility, and runtime regression tests
 ```

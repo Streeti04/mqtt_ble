@@ -5,12 +5,16 @@ import bleak_autorelease
 
 try:
     import objc
-    from bleak.backends.corebluetooth.CentralManagerDelegate import CentralManagerDelegate
+    from bleak.backends.corebluetooth.CentralManagerDelegate import (
+        CentralManagerDelegate,
+    )
 except ImportError:
     objc = None
 
 
-@unittest.skipIf(sys.platform != "darwin" or objc is None, "CoreBluetooth-Backend nur auf macOS")
+@unittest.skipIf(
+    sys.platform != "darwin" or objc is None, "CoreBluetooth backend requires macOS"
+)
 class InstallTest(unittest.TestCase):
     def setUp(self):
         self.original = CentralManagerDelegate.did_discover_peripheral
@@ -31,7 +35,9 @@ class InstallTest(unittest.TestCase):
                 return False
 
         calls = []
-        CentralManagerDelegate.did_discover_peripheral = lambda self, *a: calls.append(a)
+        CentralManagerDelegate.did_discover_peripheral = lambda self, *a: calls.append(
+            a
+        )
         objc.autorelease_pool = SpyPool
         try:
             self.assertTrue(bleak_autorelease.install())

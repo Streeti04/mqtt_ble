@@ -1,18 +1,15 @@
-"""Leeren des internen Geraete-Caches von BleakScanner.
+"""Bound Bleak's internal cache of observed devices.
 
-bleak merkt sich jedes je gesehene BLE-Geraet samt letztem Advertisement in
-``scanner._backend.seen_devices``. Bei Geraeten mit wechselnden (Resolvable
-Private) Adressen waechst das ueber Wochen unbegrenzt. Die oeffentliche
-Property ``discovered_devices_and_advertisement_data`` liefert seit bleak 0.19
-nur eine Kopie — ``.clear()`` darauf bewirkt nichts.
+Devices using rotating private addresses can grow _backend.seen_devices
+indefinitely. The public discovered_devices_and_advertisement_data property
+returns a copy, so clearing it does not release the real cache.
 """
 
 
 def clear_scanner_cache(scanner):
-    """Leert den echten Cache des Scanners und gibt die Anzahl entfernter Eintraege zurueck.
+    """Clear the backend cache and return the number of removed entries.
 
-    Gibt None zurueck, wenn bleak den Cache nicht unter ``_backend.seen_devices``
-    ablegt (anderes bleak-Layout) — der Aufrufer sollte das melden.
+    Return None for an unsupported Bleak layout so callers can report it.
     """
     cache = getattr(getattr(scanner, "_backend", None), "seen_devices", None)
     if cache is None:

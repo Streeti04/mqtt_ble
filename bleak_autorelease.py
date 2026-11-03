@@ -1,24 +1,21 @@
-"""Autorelease-Pool um bleaks CoreBluetooth-Advertisement-Verarbeitung.
+"""Bound temporary Objective-C objects during Bleak advertisement processing.
 
-bleak ruft ``CentralManagerDelegate.did_discover_peripheral`` per
-``call_soon_threadsafe`` im Python-Main-Thread auf. Dort laeuft asyncio ohne
-NSRunLoop, der Autorelease-Pool des Main-Threads wird also nie geleert. Jedes
-Advertisement (~20/s) hinterlaesst autoreleased ObjC-Objekte (UUIDString,
-NSData, NSDictionary-Enumeratoren) — das Prozess-Footprint waechst um ~35 MB/h
-(531 MB nach 16 h), obwohl der Python-Heap flach bleibt.
-
-``install()`` ersetzt die Methode durch eine Variante mit eigenem Pool.
+CoreBluetooth schedules did_discover_peripheral on the Python event loop.
+An explicit autorelease pool prevents temporary Objective-C objects from
+accumulating while the observer runs continuously without a native NSRunLoop.
 """
 
 import functools
 
 
 def install():
-    """Patcht bleak. Gibt True zurueck, wenn der Pool aktiv ist, sonst False."""
+    """Install the pool wrapper once; return whether the patch is available."""
     try:
         import objc
-        from bleak.backends.corebluetooth.CentralManagerDelegate import CentralManagerDelegate
-    except ImportError:  # kein macOS / anderes bleak-Layout
+        from bleak.backends.corebluetooth.CentralManagerDelegate import (
+            CentralManagerDelegate,
+        )
+    except ImportError:  # Non-macOS host or unsupported Bleak layout
         return False
 
     original = getattr(CentralManagerDelegate, "did_discover_peripheral", None)

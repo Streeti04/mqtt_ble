@@ -8,17 +8,19 @@ from scanner_cache import clear_scanner_cache
 
 
 def make_scanner(n):
-    """BleakScanner ohne Bluetooth-Zugriff, mit n Eintraegen im Backend-Cache."""
+    """Build a scanner with n cached devices without accessing Bluetooth."""
     scanner = BleakScanner.__new__(BleakScanner)
     scanner._backend = types.SimpleNamespace(
-        seen_devices={f"uuid-{i}": (BLEDevice(f"addr-{i}", "n", None), object()) for i in range(n)}
+        seen_devices={
+            f"uuid-{i}": (BLEDevice(f"addr-{i}", "n", None), object()) for i in range(n)
+        }
     )
     return scanner
 
 
 class ClearScannerCacheTest(unittest.TestCase):
     def test_public_property_clear_is_a_noop(self):
-        # Regression: der alte Fix leerte nur diese Kopie.
+        # Regression: the old cleanup only cleared this copy.
         scanner = make_scanner(3)
         scanner.discovered_devices_and_advertisement_data.clear()
         self.assertEqual(len(scanner._backend.seen_devices), 3)

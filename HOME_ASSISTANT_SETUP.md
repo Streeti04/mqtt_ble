@@ -15,7 +15,7 @@ Start the BLE scanner and, if needed, the Govee LAN bridge in separate terminals
 
 ```bash
 .venv/bin/python observe_bleak.py
-.venv/bin/python goove_mqtt_bridge.py
+.venv/bin/python govee_lan.py
 ```
 
 The optional MQTT monitor can help diagnose broker traffic:
@@ -23,6 +23,15 @@ The optional MQTT monitor can help diagnose broker traffic:
 ```bash
 .venv/bin/python monitor_mqtt.py
 ```
+
+## Learn BLE devices
+
+On first start, the observer has an empty device allowlist. Enable **Allow new BLE
+devices** in Home Assistant to admit supported nearby devices. Learning ends after ten
+minutes by default, and always starts OFF after a restart. Known devices remain allowed.
+
+Use `config.json` for model rules, learning duration, LAN filters, and device names.
+See the [configuration reference](docs/configuration.md).
 
 ## Entities and topics
 

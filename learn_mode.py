@@ -1,11 +1,7 @@
-"""
-Lernmodus und Allowlist fuer den BLE-Observer (reine Logik, ohne BLE/MQTT)
-=========================================================================
-- Allowlist: persistente Liste der Geraete-IDs (wie im HA-Discovery-Topic,
-  z.B. "govee_ble_light_<mac>" oder "govee_<mac>"), die veroeffentlicht werden.
-- LearnWindow: zeitlich begrenztes Fenster, in dem unbekannte, unterstuetzte
-  Geraete aufgenommen werden. Startet immer AUS.
-- decide(): Entscheidung pro Geraet: ALLOW / LEARN / IGNORE.
+"""Persistent device admission and time-limited learning without BLE or MQTT.
+
+Allowlist stores stable Home Assistant device IDs. LearnWindow admits supported
+unknown devices for a limited duration and always starts disabled.
 """
 
 import json
@@ -18,13 +14,13 @@ from pathlib import Path
 
 DEFAULT_LEARN_SECONDS = 10 * 60
 
-DECISION_ALLOW = "allow"    # bekannt -> wie bisher veroeffentlichen
-DECISION_LEARN = "learn"    # unbekannt + Lernmodus -> aufnehmen und veroeffentlichen
-DECISION_IGNORE = "ignore"  # unbekannt, kein Lernmodus -> nichts tun
+DECISION_ALLOW = "allow"  # Known device: publish normally
+DECISION_LEARN = "learn"  # Unknown device while learning: persist and publish
+DECISION_IGNORE = "ignore"  # Unknown device outside learning: ignore
 
 
 def decide(device_id, allowlist, learning):
-    """Allowlist-Entscheidung fuer ein (bereits als unterstuetzt erkanntes) Geraet."""
+    """Choose whether to publish, learn, or ignore a supported device."""
     if allowlist.contains(device_id):
         return DECISION_ALLOW
     if learning:
@@ -33,7 +29,7 @@ def decide(device_id, allowlist, learning):
 
 
 def parse_switch_payload(payload):
-    """'ON'/'OFF' (bytes oder str, case-insensitiv) -> True/False, sonst None."""
+    """Parse case-insensitive ON/OFF bytes or strings; return None otherwise."""
     if isinstance(payload, (bytes, bytearray)):
         try:
             payload = payload.decode("utf-8")
@@ -48,26 +44,26 @@ def parse_switch_payload(payload):
 
 
 class LearnWindow:
-    """Thread-sicheres Lernfenster mit automatischem Ablauf.
+    """Thread-safe learning window with automatic expiry.
 
-    clock ist injizierbar (Default time.monotonic), damit Tests ohne Warten laufen.
+    An injectable monotonic clock lets tests advance time without waiting.
     """
 
     def __init__(self, duration_seconds=DEFAULT_LEARN_SECONDS, clock=time.monotonic):
         if duration_seconds <= 0:
-            raise ValueError("duration_seconds muss > 0 sein")
+            raise ValueError("duration_seconds must be greater than zero")
         self.duration = duration_seconds
         self._clock = clock
         self._until = None
         self._lock = threading.Lock()
 
     def enable(self):
-        """Startet (oder verlaengert) das Fenster ab jetzt um duration Sekunden."""
+        """Start or extend the window from the current time."""
         with self._lock:
             self._until = self._clock() + self.duration
 
     def disable(self):
-        """Beendet das Fenster. Gibt True zurueck, wenn es vorher aktiv war."""
+        """Close the window and report whether it was previously enabled."""
         with self._lock:
             was_active = self._until is not None
             self._until = None
@@ -84,7 +80,7 @@ class LearnWindow:
             return max(0.0, self._until - self._clock())
 
     def poll_expired(self):
-        """True genau einmal, wenn ein aktives Fenster abgelaufen ist (setzt es AUS)."""
+        """Close an expired window and report the transition exactly once."""
         with self._lock:
             if self._until is not None and self._clock() >= self._until:
                 self._until = None
@@ -93,7 +89,7 @@ class LearnWindow:
 
 
 class Allowlist:
-    """Persistente Allowlist (JSON) mit atomischem Schreiben.
+    """Persist device metadata as JSON using atomic file replacement.
 
     Format: {"version": 1, "devices": {"<id>": {"name": ..., "added": ..., "source": ...}}}
     """
@@ -107,21 +103,24 @@ class Allowlist:
 
     @classmethod
     def load(cls, path):
-        """Laedt die Datei; fehlt sie, ist die Liste leer. Kaputtes JSON -> Fehler.
+        """Load a saved allowlist; a missing file starts empty.
 
-        Bewusst kein stilles Ueberschreiben einer defekten Datei: lieber Abbruch,
-        als versehentlich alle Geraete zu verlieren.
+        Reject corrupt files rather than silently discarding known devices.
         """
         allowlist = cls(path)
         if allowlist.path.is_file():
             data = json.loads(allowlist.path.read_text(encoding="utf-8"))
             if not isinstance(data, dict) or "devices" not in data:
-                raise ValueError(f"{allowlist.path}: Schluessel 'devices' fehlt oder Format ungueltig")
+                raise ValueError(
+                    f"{allowlist.path}: Missing 'devices' key or invalid allowlist format"
+                )
             devices = data["devices"]
             if isinstance(devices, list):
                 devices = {str(d): {} for d in devices}
             if not isinstance(devices, dict):
-                raise ValueError(f"{allowlist.path}: 'devices' hat ungueltiges Format")
+                raise ValueError(
+                    f"{allowlist.path}: 'devices' must be a list or object"
+                )
             allowlist._devices = {str(k): dict(v or {}) for k, v in devices.items()}
         return allowlist
 
@@ -138,7 +137,7 @@ class Allowlist:
             return len(self._devices)
 
     def add(self, device_id, name=None, source="learn"):
-        """Nimmt ein Geraet auf und speichert sofort. False, wenn schon vorhanden."""
+        """Persist a new device immediately; return False if already present."""
         with self._lock:
             if device_id in self._devices:
                 return False
@@ -150,7 +149,7 @@ class Allowlist:
             try:
                 self._save_locked()
             except OSError:
-                # Nicht im Speicher behalten, wenn es nicht auf die Platte kam
+                # Roll back in-memory admission if persistence fails
                 del self._devices[device_id]
                 raise
             return True
@@ -162,7 +161,9 @@ class Allowlist:
     def _save_locked(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
         payload = {"version": self.VERSION, "devices": self._devices}
-        fd, tmp = tempfile.mkstemp(prefix=".known_devices.", suffix=".tmp", dir=self.path.parent)
+        fd, tmp = tempfile.mkstemp(
+            prefix=".known_devices.", suffix=".tmp", dir=self.path.parent
+        )
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 json.dump(payload, fh, indent=2, sort_keys=True, ensure_ascii=False)
@@ -179,7 +180,7 @@ class Allowlist:
 
 
 class OnceLogger:
-    """Merkt sich, welche IDs schon geloggt wurden (begrenzte Groesse)."""
+    """Track previously logged device IDs with a bounded set."""
 
     def __init__(self, max_entries=2000):
         self.max_entries = max_entries

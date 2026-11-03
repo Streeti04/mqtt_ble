@@ -22,8 +22,12 @@ Thumbs.db
 # Logs
 *.log
 
-# Lokale MQTT-Zugangsdaten (Vorlage: mqtt.env.example)
+# Local MQTT credentials (template: mqtt.env.example)
 mqtt.env
 
-# Laufzeit-Zustand (Allowlist known_devices.json)
+# Runtime state (known_devices.json allowlist)
 state/
+
+# Local device settings (template: config.example.json)
+config.json
+.ruff_cache/

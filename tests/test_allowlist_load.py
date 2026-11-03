@@ -19,7 +19,7 @@ class AllowlistLoadTests(unittest.TestCase):
         self.path.write_text('["govee_abc"]', encoding="utf-8")
         with self.assertRaises(ValueError):
             Allowlist.load(self.path)
-        # Datei bleibt unverändert, nichts wurde überschrieben
+        # The file remains unchanged after rejection
         self.assertEqual(self.path.read_text(encoding="utf-8"), '["govee_abc"]')
 
     def test_dict_without_devices_key_is_rejected(self):
@@ -28,12 +28,16 @@ class AllowlistLoadTests(unittest.TestCase):
             Allowlist.load(self.path)
 
     def test_valid_file_still_loads(self):
-        self.path.write_text('{"version": 1, "devices": {"govee_x": {}}}', encoding="utf-8")
+        self.path.write_text(
+            '{"version": 1, "devices": {"govee_x": {}}}', encoding="utf-8"
+        )
         self.assertEqual(Allowlist.load(self.path).ids(), ["govee_x"])
 
     def test_failed_save_does_not_keep_device_in_memory(self):
         allowlist = Allowlist(self.path)
-        with mock.patch.object(Allowlist, "_save_locked", side_effect=OSError("disk full")):
+        with mock.patch.object(
+            Allowlist, "_save_locked", side_effect=OSError("disk full")
+        ):
             with self.assertRaises(OSError):
                 allowlist.add("govee_new")
         self.assertFalse(allowlist.contains("govee_new"))
@@ -41,7 +45,12 @@ class AllowlistLoadTests(unittest.TestCase):
 
 class ChangeMeUserTests(unittest.TestCase):
     def test_placeholder_user_is_rejected(self):
-        env = {"MQTT_HOST": "127.0.0.1", "MQTT_PORT": "1883", "MQTT_USER": "CHANGE_ME", "MQTT_PASSWORD": "secret"}
+        env = {
+            "MQTT_HOST": "127.0.0.1",
+            "MQTT_PORT": "1883",
+            "MQTT_USER": "CHANGE_ME",
+            "MQTT_PASSWORD": "secret",
+        }
         with self.assertRaises(MqttConfigError):
             load_mqtt_config(env_file="/nonexistent", environ=env)
 
