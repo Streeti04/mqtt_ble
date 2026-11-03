@@ -2,3 +2,5 @@
 paho-mqtt>=2.1.0
 bleak>=1.1.0
 govee-led-wez>=0.0.15
+# NSData conversion leaks native references with older macOS bridge versions.
+pyobjc-core>=13.0; sys_platform == "darwin"

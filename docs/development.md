@@ -14,7 +14,10 @@ python -m unittest discover -s tests -v
 Tests use temporary state directories and mocked MQTT/Bluetooth clients. They do not
 connect to a broker, bind the LAN response port, or scan nearby devices. macOS tests
 exercise the CoreBluetooth autorelease wrapper; those checks are skipped on other
-platforms. CI runs on Python 3.10 and 3.13 on Linux, plus Python 3.13 on macOS.
+platforms. CI runs on Python 3.10 and 3.13 on Linux, plus Python 3.13 and 3.14 on macOS.
+macOS requires Python 3.11 or newer because PyObjC 13 fixes a native buffer reference
+leak present in older versions. Native regression tests check that repeatedly converting
+`NSData` to bytes releases its temporary references.
 
 ## Modules and responsibilities
 
