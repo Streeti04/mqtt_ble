@@ -9,8 +9,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from mqtt_ble.paths import default_config_dir
+
 REQUIRED_KEYS = ("MQTT_HOST", "MQTT_PORT", "MQTT_USER", "MQTT_PASSWORD")
-DEFAULT_ENV_FILE = Path(__file__).resolve().parent / "mqtt.env"
 
 
 class MqttConfigError(RuntimeError):
@@ -54,7 +55,9 @@ def parse_env_text(text):
 def load_mqtt_config(env_file=None, environ=None):
     """Load and validate credentials, raising MqttConfigError on failure."""
     environ = os.environ if environ is None else environ
-    path = Path(env_file or environ.get("MQTT_ENV_FILE") or DEFAULT_ENV_FILE)
+    path = Path(
+        env_file or environ.get("MQTT_ENV_FILE") or default_config_dir() / "mqtt.env"
+    )
 
     file_values = {}
     file_error = None
@@ -80,7 +83,7 @@ def load_mqtt_config(env_file=None, environ=None):
             "Incomplete MQTT configuration; missing: "
             + ", ".join(missing)
             + hint
-            + ". Copy mqtt.env.example to mqtt.env and fill in the settings."
+            + ". Copy config/mqtt.env.example to mqtt.env and fill in the settings."
         )
 
     for key in ("MQTT_USER", "MQTT_PASSWORD"):

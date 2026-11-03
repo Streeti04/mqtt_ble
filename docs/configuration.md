@@ -5,10 +5,10 @@ All settings are read once at startup; restart the relevant process after editin
 
 ## MQTT credentials
 
-Copy `mqtt.env.example` to `mqtt.env`, fill in all four values, and restrict access:
+Copy `config/mqtt.env.example` to `mqtt.env`, fill in all four values, and restrict access:
 
 ```bash
-cp mqtt.env.example mqtt.env
+cp config/mqtt.env.example mqtt.env
 chmod 600 mqtt.env
 ```
 
@@ -20,11 +20,11 @@ configuration errors or the configuration object's representation.
 
 ## Device and runtime settings
 
-The complete, versioned defaults live in [`config/defaults.json`](../config/defaults.json).
+The complete, versioned defaults live in [`src/mqtt_ble/resources/defaults.json`](../src/mqtt_ble/resources/defaults.json).
 To override them locally:
 
 ```bash
-cp config.example.json config.json
+cp config/config.example.json config.json
 ```
 
 `config.json` and `mqtt.env` are ignored by Git. The example files contain no personal
@@ -32,7 +32,7 @@ addresses or credentials. JSON requires double quotes and does not allow comment
 
 Settings are resolved in this order, from lowest to highest priority:
 
-1. Bundled `config/defaults.json`.
+1. Bundled `mqtt_ble/resources/defaults.json`.
 2. Local `config.json`, or the file selected by `MQTT_BLE_CONFIG`.
 3. Existing `MQTT_BLE_STATE_DIR` and `MQTT_BLE_LEARN_SECONDS` environment overrides.
 
@@ -43,7 +43,8 @@ network connection or Bluetooth scan starts.
 
 Relative `ble.state_dir` paths, including the environment override, are resolved against
 the selected configuration file's directory. Without a selected file they are relative
-to the project directory. This keeps state independent of the shell's working directory.
+to the default configuration directory described below. Selecting an absolute config
+path keeps state independent of the shell's working directory.
 
 ### BLE settings
 
@@ -81,7 +82,7 @@ For an exact list of lights, clear both prefix lists as well as setting `light_m
 Matching a name makes a device eligible for discovery; it does not add protocol support.
 The sensor decoder still handles the existing manufacturer payload format, and BLE light
 commands still depend on the models supported by `govee-led-wez`. Fixed manufacturer
-identifiers and packet layouts belong to the protocol helpers in `govee_devices.py`.
+identifiers and packet layouts belong to the protocol helpers in `mqtt_ble.devices`.
 
 ### LAN settings
 
@@ -106,7 +107,8 @@ Example with a documentation-only address:
 ```
 
 MAC address keys are normalized by removing colons and hyphens and converting to
-uppercase. The LAN multicast address and ports remain protocol constants in `govee_lan.py`.
+uppercase. The LAN multicast address and ports remain protocol constants in
+`mqtt_ble.lan.bridge`.
 LAN discovery runs at startup. Restart the bridge to discover lights added later.
 
 ## Device learning and state
@@ -122,3 +124,17 @@ An unreadable or corrupt allowlist stops startup instead of discarding known dev
 Existing discovery topics, unique IDs, and allowlist IDs are preserved. In particular,
 sensor IDs keep their historical macOS UUID hyphens while BLE light IDs omit them.
 English discovery names may update the default display names of existing entities.
+
+## Configuration directory
+
+An editable installation (`pip install -e .`) keeps looking for `config.json` and
+`mqtt.env` at the checkout root, even when started from another directory. Existing
+`state/known_devices.json` files therefore keep their location after the move to `src/`.
+
+A regular wheel installation uses the process working directory for those local files
+and the default `state/` directory. The package itself only contains read-only defaults;
+credentials and runtime state are never written into `site-packages`.
+
+For services started outside a checkout, set an explicit working directory or select
+absolute paths through `MQTT_BLE_CONFIG` and `MQTT_ENV_FILE`. Relative state paths remain
+anchored to the selected JSON file's directory, not to the package installation.

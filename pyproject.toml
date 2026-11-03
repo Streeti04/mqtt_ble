@@ -1,3 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mqtt-ble"
+version = "0.1.0"
+description = "Govee BLE and LAN bridges for Home Assistant over MQTT"
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.scripts]
+mqtt-ble-observer = "mqtt_ble.ble.observer:main"
+mqtt-ble-lan = "mqtt_ble.lan.bridge:main"
+mqtt-ble-monitor = "mqtt_ble.mqtt.monitor:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.package-data]
+mqtt_ble = ["resources/*.json"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
 [tool.ruff]
 target-version = "py310"
 line-length = 88

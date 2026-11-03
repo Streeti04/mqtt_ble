@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import datetime
 
-from basic_mqtt import MqttClient
+from mqtt_ble.mqtt.client import MqttClient
 
 
 class GoveeMonitor:

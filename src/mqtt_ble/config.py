@@ -1,7 +1,7 @@
 """Load validated device settings separately from MQTT credentials.
 
 Bundled defaults are overlaid with config.json, then legacy environment overrides.
-Relative paths are anchored to the configuration file, never the working directory.
+Relative state paths are anchored to the selected configuration directory.
 """
 
 import json
@@ -9,12 +9,13 @@ import math
 import os
 import sys
 from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
 
-from govee_devices import normalize_mac
+from mqtt_ble.devices import normalize_mac
+from mqtt_ble.paths import default_config_dir
 
-PROJECT_DIR = Path(__file__).resolve().parent
-DEFAULTS_FILE = PROJECT_DIR / "config" / "defaults.json"
+DEFAULTS_FILE = files("mqtt_ble").joinpath("resources/defaults.json")
 
 
 class AppConfigError(ValueError):
@@ -93,7 +94,7 @@ def load_app_config(config_file=None, environ=None):
     path = (
         Path(selected).expanduser().resolve()
         if selected
-        else PROJECT_DIR / "config.json"
+        else default_config_dir() / "config.json"
     )
     data = _read_json(DEFAULTS_FILE)
     if selected or path.exists():

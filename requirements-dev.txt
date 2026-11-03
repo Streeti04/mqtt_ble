@@ -1,2 +1,2 @@
--r requirements.txt
+-e .
 ruff==0.17.3

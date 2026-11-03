@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from learn_mode import (
+from mqtt_ble.ble.learning import (
     DECISION_ALLOW,
     DECISION_IGNORE,
     DECISION_LEARN,

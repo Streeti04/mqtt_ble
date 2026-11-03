@@ -11,17 +11,18 @@ Git and must not be committed.
 
 ## Services
 
-Start the BLE scanner and, if needed, the Govee LAN bridge in separate terminals:
+After following the [installation steps](../README.md#setup), start the BLE scanner and,
+if needed, the Govee LAN bridge in separate terminals:
 
 ```bash
-.venv/bin/python observe_bleak.py
-.venv/bin/python govee_lan.py
+.venv/bin/mqtt-ble-observer
+.venv/bin/mqtt-ble-lan
 ```
 
 The optional MQTT monitor can help diagnose broker traffic:
 
 ```bash
-.venv/bin/python monitor_mqtt.py
+.venv/bin/mqtt-ble-monitor
 ```
 
 ## Learn BLE devices
@@ -31,7 +32,7 @@ devices** in Home Assistant to admit supported nearby devices. Learning ends aft
 minutes by default, and always starts OFF after a restart. Known devices remain allowed.
 
 Use `config.json` for model rules, learning duration, LAN filters, and device names.
-See the [configuration reference](docs/configuration.md).
+See the [configuration reference](configuration.md).
 
 ## Entities and topics
 

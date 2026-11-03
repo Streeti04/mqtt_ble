@@ -30,3 +30,11 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: python -m unittest discover -s tests -v
+      - name: Build and install the wheel
+        run: |
+          python -m pip wheel --no-deps . --wheel-dir dist
+          python -m pip install --force-reinstall --no-deps dist/*.whl
+          python -m pip check
+      - name: Test the installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: python -m unittest discover -s "$GITHUB_WORKSPACE/tests" -v

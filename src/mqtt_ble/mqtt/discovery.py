@@ -4,7 +4,7 @@ Device identifiers and topic names remain stable across the refactor so that
 existing entities and persisted allowlists continue to work.
 """
 
-from govee_devices import advertised_light_model
+from mqtt_ble.devices import advertised_light_model
 
 LEARN_COMMAND_TOPIC = "mqtt_ble/observe/learn/set"
 LEARN_STATE_TOPIC = "mqtt_ble/observe/learn/state"
