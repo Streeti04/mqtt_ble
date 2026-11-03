@@ -30,7 +30,7 @@ flowchart LR
 ## Requirements
 
 - macOS with Bluetooth access and permission for the Python process
-- Python 3.10 or newer
+- Python 3.11 or newer on macOS (the LAN bridge also supports Python 3.10 on Linux)
 - An MQTT broker reachable from the Mac
 - Govee LAN Control enabled for lights using the LAN bridge
 
@@ -110,6 +110,8 @@ python -m unittest discover -s tests -v
 
 See the [development guide](docs/development.md) for module responsibilities, testing,
 and compatibility details. Checks also run automatically on pull requests.
+For macOS service startup and memory diagnostics, see the
+[launchd guide](docs/macos-launchd.md).
 
 ## Project layout
 
